@@ -118,17 +118,17 @@ pub async fn render_tree(db: &Db, person: i64) -> Result<String> {
         .await?
         .ok_or(crate::model::OrgError::PersonNotFound(person))?;
 
+    // Show the id on every line: names aren't unique, so without ids two people
+    // with the same name are indistinguishable in the tree.
     let mut out = String::new();
-    out.push_str(&anchor.name);
-    out.push('\n');
+    out.push_str(&format!("#{}  {}\n", anchor.id, anchor.name));
 
     for node in subtree(db, person).await? {
         // depth 1 -> two spaces, depth 2 -> four, etc.
         for _ in 0..node.depth {
             out.push_str("  ");
         }
-        out.push_str(&node.name);
-        out.push('\n');
+        out.push_str(&format!("#{}  {}\n", node.id, node.name));
     }
     Ok(out)
 }
@@ -206,10 +206,10 @@ mod tests {
     async fn render_tree_indents() {
         let db = seeded().await;
         let text = render_tree(&db, 4).await.unwrap();
-        // Pat at root, three reports indented two spaces.
-        assert!(text.starts_with("Pat Smith\n"));
-        assert!(text.contains("\n  Trent Rush\n"));
-        assert!(text.contains("\n  Jane Doe\n"));
+        // Pat (#4) at root, three reports indented two spaces, each with its id.
+        assert!(text.starts_with("#4  Pat Smith\n"));
+        assert!(text.contains("\n  #5  Trent Rush\n"));
+        assert!(text.contains("\n  #6  Jane Doe\n"));
     }
 
     #[tokio::test]

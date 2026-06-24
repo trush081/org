@@ -84,7 +84,8 @@ pub fn chain(nodes: &[Node]) -> String {
         for _ in 1..n.depth {
             out.push_str("  ");
         }
-        out.push_str(&format!("  → {}\n", n.name));
+        // Include the id: names aren't unique, so "→ Trent 1" is ambiguous.
+        out.push_str(&format!("  → #{}  {}\n", n.id, n.name));
     }
     out
 }

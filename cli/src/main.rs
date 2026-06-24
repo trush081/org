@@ -145,7 +145,7 @@ async fn main() -> Result<()> {
                 println!("  (none)");
             } else {
                 for r in &reports {
-                    println!("  - {}", r.name);
+                    println!("  - #{}  {}", r.id, r.name);
                 }
             }
         }
