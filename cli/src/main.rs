@@ -69,10 +69,13 @@ enum Command {
     Export,
     /// Load a JSON dump from a file (or '-' for stdin).
     Import { path: String },
-    /// Update `org` itself by rebuilding and reinstalling from source.
+    /// Update `org` itself. By default pulls the latest from GitHub and reinstalls.
     Update {
-        /// Path to the org source checkout. Defaults to $ORG_SRC, then the repo
-        /// this binary was built from (recorded at compile time).
+        /// Install from a local checkout instead of GitHub.
+        #[arg(long)]
+        local: bool,
+        /// Local checkout path (implies --local). Defaults to $ORG_SRC, then the
+        /// repo this binary was built from (recorded at compile time).
         #[arg(long)]
         source: Option<PathBuf>,
         /// Print the install command instead of running it.
@@ -87,8 +90,13 @@ async fn main() -> Result<()> {
 
     // `update` manages the binary itself — it must not require (or be blocked
     // by) the database, so handle it before opening any connection.
-    if let Command::Update { source, dry_run } = &cli.command {
-        return update::run(source.clone(), *dry_run);
+    if let Command::Update {
+        local,
+        source,
+        dry_run,
+    } = &cli.command
+    {
+        return update::run(*local, source.clone(), *dry_run);
     }
 
     // Resolve DB location with the precedence core defines, then open it.
