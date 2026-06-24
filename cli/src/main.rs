@@ -2,6 +2,7 @@
 //! to core, and prints. All logic lives in core; this file is wiring + output.
 
 mod render;
+mod update;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -68,11 +69,27 @@ enum Command {
     Export,
     /// Load a JSON dump from a file (or '-' for stdin).
     Import { path: String },
+    /// Update `org` itself by rebuilding and reinstalling from source.
+    Update {
+        /// Path to the org source checkout. Defaults to $ORG_SRC, then the repo
+        /// this binary was built from (recorded at compile time).
+        #[arg(long)]
+        source: Option<PathBuf>,
+        /// Print the install command instead of running it.
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // `update` manages the binary itself — it must not require (or be blocked
+    // by) the database, so handle it before opening any connection.
+    if let Command::Update { source, dry_run } = &cli.command {
+        return update::run(source.clone(), *dry_run);
+    }
 
     // Resolve DB location with the precedence core defines, then open it.
     let config = Config::resolve(cli.file);
@@ -186,6 +203,9 @@ async fn main() -> Result<()> {
             org_core::import_json(&db, &json).await?;
             println!("Imported directory from {path}.");
         }
+
+        // Handled above, before the DB is opened. Unreachable here.
+        Command::Update { .. } => unreachable!("update is dispatched before db open"),
     }
 
     Ok(())
