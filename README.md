@@ -17,12 +17,28 @@ cargo test --workspace                                  # 38 passing
 cargo clippy --workspace --all-targets -- -D warnings   # clean
 ```
 
+## Install
+
+Requires Rust (`cargo`). Install straight from GitHub — no clone needed:
+
+```sh
+cargo install --git https://github.com/trush081/org.git org
+```
+
+This puts `org` on your PATH (in `~/.cargo/bin`). To update later, just run:
+
+```sh
+org update                 # pull the latest from GitHub and reinstall
+```
+
+`org update` always installs from GitHub by default. For local development use
+`org update --local` (builds from your checkout — handy for testing unpushed
+changes), or `org update --dry-run` to see the exact `cargo install` command
+without running it.
+
 ## Quick start
 
 ```sh
-cargo build
-alias org=./target/debug/org   # or `cargo run -p org -- <args>`
-
 org add "Pat Smith"  --team "IDS Fulfillment" --title "Eng Manager"
 org add "Trent Rush" --team "IDS Fulfillment" --title "Sr Engineer"
 org set-boss 2 1                 # Trent (#2) reports to Pat (#1)
@@ -30,6 +46,9 @@ org add "Mike Chen" --team "IDS Fulfillment" --infer-boss   # guesses Pat from t
 org who 2                        # detail + chain of command + direct reports
 org tree 1                       # the reporting tree under Pat
 ```
+
+Working from a clone instead? `cargo run -p org -- <args>`, or
+`cargo build && alias org=./target/debug/org`.
 
 ## Commands
 
@@ -46,6 +65,7 @@ org tree 1                       # the reporting tree under Pat
 | `remove <id>` | Delete a person (cascades their edges). |
 | `export` | Dump the whole directory as JSON to stdout. |
 | `import <file\|->` | Load a JSON dump from a file or stdin. |
+| `update [--local] [--dry-run]` | Update `org` itself — reinstall the latest from GitHub (or `--local` from a checkout). |
 
 ## Database
 
