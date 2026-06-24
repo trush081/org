@@ -1,0 +1,16 @@
+[package]
+name = "org-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+libsql = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+strsim = { workspace = true }
+
+[dev-dependencies]
+# Tests drive async core fns, so the test binary needs a runtime + #[tokio::test].
+tokio = { workspace = true }

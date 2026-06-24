@@ -1,0 +1,15 @@
+[package]
+name = "org"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "org"
+path = "src/main.rs"
+
+[dependencies]
+org-core = { path = "../core" }
+tokio = { workspace = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
