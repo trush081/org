@@ -1,10 +1,10 @@
 # org
 
 A relationship-aware employee directory. Look up a person or team and see their
-role, chain of command, who reports to them, and how they relate to others.
-Reporting lines are just one kind of relationship in a graph — which leaves room
-to grow into mentorship, collaboration, and (later) AI-inferred hierarchy and
-semantic search over notes.
+role, chain of command, and who reports to them — with title seniority baked in,
+so a Sr Engineer lists above an SWE II under the same boss. Reporting lines are
+rows in a relationship graph, which leaves room to grow into (later) AI-inferred
+hierarchy and semantic search over notes.
 
 CLI first; a Tauri desktop app and AI features come later, over the same core.
 
@@ -13,7 +13,7 @@ CLI first; a Tauri desktop app and AI features come later, over the same core.
 **Milestone 1 complete:** `core` + `cli`, working and tested.
 
 ```
-cargo test --workspace                                  # 45 passing
+cargo test --workspace                                  # 52 passing
 cargo clippy --workspace --all-targets -- -D warnings   # clean
 ```
 
@@ -61,10 +61,9 @@ Working from a clone instead? `cargo run -p org -- <args>`, or
 | `find <query>` | Fuzzy search across name/team/title/notes (substring + typo tolerance). |
 | `list [--team <team>]` | List people, optionally one team. |
 | `teams` | Per-team headcounts. |
-| `tree <id>` | Indented reporting tree under a person. |
-| `who <id>` | Person detail + chain of command + direct reports. |
+| `tree <id>` | Indented reporting tree under a person, most senior siblings first. |
+| `who <id>` | Person detail + chain of command + direct reports (with titles). |
 | `set-boss <person> <boss>` | Set/replace a reporting line. |
-| `relate <from> <to> --kind <kind>` | Generic edge, e.g. `--kind mentors`. |
 | `remove <id>` | Delete a person (cascades their edges). |
 | `export` | Dump the whole directory as JSON to stdout. |
 | `import <file\|->` | Load a JSON dump from a file or stdin. |

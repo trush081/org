@@ -155,6 +155,5 @@ INSERT INTO relationships (from_id, to_id, kind, confidence, source, created_at)
   (3, 1, 'reports_to', 1.0, 'manual', '2026-01-01'),
   (5, 4, 'reports_to', 1.0, 'manual', '2026-01-01'),
   (6, 4, 'reports_to', 1.0, 'manual', '2026-01-01'),
-  (7, 4, 'reports_to', 1.0, 'manual', '2026-01-01'),
-  (5, 6, 'mentors',    1.0, 'manual', '2026-01-01');
+  (7, 4, 'reports_to', 1.0, 'manual', '2026-01-01');
 "#;

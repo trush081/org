@@ -85,7 +85,10 @@ pub fn chain(nodes: &[Node]) -> String {
             out.push_str("  ");
         }
         // Include the id: names aren't unique, so "→ Trent 1" is ambiguous.
-        out.push_str(&format!("  → #{}  {}\n", n.id, n.name));
+        match &n.title {
+            Some(t) => out.push_str(&format!("  → #{}  {} — {}\n", n.id, n.name, t)),
+            None => out.push_str(&format!("  → #{}  {}\n", n.id, n.name)),
+        }
     }
     out
 }

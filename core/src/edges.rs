@@ -11,9 +11,11 @@ fn now() -> String {
     chrono::Utc::now().to_rfc3339()
 }
 
-/// Inputs for creating/replacing an edge.
+/// Inputs for creating/replacing an edge. Crate-internal: the public surface
+/// for reporting lines is `set_boss`; generic edges are machinery for
+/// inference (and future AI features), not a user-facing feature.
 #[derive(Debug, Clone)]
-pub struct RelateInput {
+pub(crate) struct RelateInput {
     pub from_id: i64,
     pub to_id: i64,
     pub kind: String,
@@ -26,7 +28,7 @@ pub struct RelateInput {
 
 impl RelateInput {
     /// A manual edge of the given kind: confidence 1.0, source 'manual'.
-    pub fn manual(from_id: i64, to_id: i64, kind: impl Into<String>) -> Self {
+    pub(crate) fn manual(from_id: i64, to_id: i64, kind: impl Into<String>) -> Self {
         RelateInput {
             from_id,
             to_id,
@@ -48,7 +50,7 @@ impl RelateInput {
 /// Note: this does NOT delete other edges of the same kind from `from_id` to a
 /// *different* target. For reporting lines that's wrong (a person has one boss),
 /// which is exactly why `set_boss` exists separately.
-pub async fn relate(db: &Db, input: RelateInput) -> Result<()> {
+pub(crate) async fn relate(db: &Db, input: RelateInput) -> Result<()> {
     validate_pair(&input)?;
     let ts = now();
     db.conn()
@@ -106,20 +108,6 @@ pub async fn set_boss(db: &Db, person: i64, boss: i64) -> Result<()> {
         )
         .await?;
     Ok(())
-}
-
-/// Remove a specific edge (exact from/to/kind). No-op-safe: returns Ok even if
-/// the edge didn't exist, since "make sure this relationship is gone" is the
-/// intent. Returns whether a row was actually deleted.
-pub async fn unrelate(db: &Db, from_id: i64, to_id: i64, kind: &str) -> Result<bool> {
-    let affected = db
-        .conn()
-        .execute(
-            "DELETE FROM relationships WHERE from_id = ?1 AND to_id = ?2 AND kind = ?3",
-            libsql::params![from_id, to_id, kind],
-        )
-        .await?;
-    Ok(affected > 0)
 }
 
 /// Reject self-edges and (cheaply) validate confidence range.
@@ -235,9 +223,10 @@ mod tests {
         let a = person(&db, "A").await;
         let b = person(&db, "B").await;
 
-        relate(&db, RelateInput::manual(a, b, kind::MENTORS)).await.unwrap();
+        // Kinds are open TEXT; any non-reporting kind exercises the same path.
+        relate(&db, RelateInput::manual(a, b, "peer_review")).await.unwrap();
         // Relate the same triple again with new notes -> updates, no duplicate.
-        let mut input = RelateInput::manual(a, b, kind::MENTORS);
+        let mut input = RelateInput::manual(a, b, "peer_review");
         input.notes = Some("pairing".into());
         relate(&db, input).await.unwrap();
 
@@ -245,7 +234,7 @@ mod tests {
             .conn()
             .query(
                 "SELECT COUNT(*), MAX(notes) FROM relationships WHERE from_id=?1 AND to_id=?2 AND kind=?3",
-                libsql::params![a, b, kind::MENTORS],
+                libsql::params![a, b, "peer_review"],
             )
             .await
             .unwrap();
@@ -258,24 +247,12 @@ mod tests {
     async fn relate_rejects_self_and_bad_confidence() {
         let db = Db::open_memory().await.unwrap();
         let a = person(&db, "A").await;
-        assert!(relate(&db, RelateInput::manual(a, a, kind::MENTORS)).await.is_err());
+        assert!(relate(&db, RelateInput::manual(a, a, "peer_review")).await.is_err());
 
         let b = person(&db, "B").await;
-        let mut bad = RelateInput::manual(a, b, kind::MENTORS);
+        let mut bad = RelateInput::manual(a, b, "peer_review");
         bad.confidence = 1.5;
         assert!(relate(&db, bad).await.is_err());
-    }
-
-    #[tokio::test]
-    async fn unrelate_reports_removal() {
-        let db = Db::open_memory().await.unwrap();
-        let a = person(&db, "A").await;
-        let b = person(&db, "B").await;
-        relate(&db, RelateInput::manual(a, b, kind::MENTORS)).await.unwrap();
-
-        assert!(unrelate(&db, a, b, kind::MENTORS).await.unwrap());
-        // Second call: already gone, returns false, still Ok.
-        assert!(!unrelate(&db, a, b, kind::MENTORS).await.unwrap());
     }
 
     #[tokio::test]

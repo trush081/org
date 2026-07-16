@@ -8,15 +8,17 @@ pub mod io;
 pub mod model;
 pub mod people;
 pub mod search;
+pub mod seniority;
 pub mod tree;
 
 pub use db::{Config, Db};
-pub use edges::{relate, set_boss, unrelate, RelateInput};
-pub use infer::{infer_boss, tally_boss_vote, Inference};
+pub use edges::set_boss;
+pub use infer::{infer_boss, tally_boss_vote, BossVote, Inference};
 pub use io::{export, export_json, import, import_json, OrgDump};
 pub use model::{OrgError, Person, Relationship, Result};
 pub use people::{add_person, get_person, list_people, remove_person, update_person, PersonInput};
 pub use search::{fuzzy_search, SearchHit};
+pub use seniority::{rank_of, rank_title, Rank};
 pub use tree::{
     chain_of_command, direct_reports, render_tree, roots, subtree, team_headcounts, Node,
 };
@@ -115,11 +117,19 @@ mod cte_gate {
     }
 
     #[tokio::test]
-    async fn mentors_edge_absent_from_subtree() {
+    async fn subtree_cte_walks_only_reports_to() {
         let db = seeded().await;
         // Full subtree DOWN from Pat (4): walk r.to_id = chain.id, take r.from_id.
-        // Must include Trent/Jane/Mike but the Trent->Jane MENTORS edge must not
-        // pull Jane in via mentorship — only via reports_to.
+        // A non-reporting edge must not create a second path into the subtree —
+        // kinds are open TEXT, so simulate one.
+        db.conn()
+            .execute(
+                "INSERT INTO relationships (from_id, to_id, kind, created_at)
+                 VALUES (5, 6, 'peer_review', '2026-01-01')",
+                (),
+            )
+            .await
+            .expect("insert");
         let sql = r#"
             WITH RECURSIVE sub AS (
               SELECT p.id, p.name, 0 AS depth
@@ -141,7 +151,7 @@ mod cte_gate {
             let depth: i64 = row.get(1).expect("depth");
             got.push((name, depth));
         }
-        // All three at depth 1; no duplicate Jane, no path through mentors.
+        // All three at depth 1; no duplicate Jane, no path through peer_review.
         assert_eq!(
             got,
             vec![

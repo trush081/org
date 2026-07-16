@@ -6,7 +6,7 @@ mod update;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use org_core::{Config, Db, PersonInput, RelateInput};
+use org_core::{Config, Db, PersonInput};
 use std::path::PathBuf;
 
 /// Relationship-aware employee directory.
@@ -55,13 +55,6 @@ enum Command {
         person: i64,
         /// Their new boss.
         boss: i64,
-    },
-    /// Create a generic relationship: A -> B of a given kind.
-    Relate {
-        from: i64,
-        to: i64,
-        #[arg(long, default_value = "mentors")]
-        kind: String,
     },
     /// Remove a person (cascades their relationship edges).
     Remove { id: i64 },
@@ -173,8 +166,12 @@ async fn main() -> Result<()> {
             if reports.is_empty() {
                 println!("  (none)");
             } else {
+                // Already most-senior-first from core.
                 for r in &reports {
-                    println!("  - #{}  {}", r.id, r.name);
+                    match &r.title {
+                        Some(t) => println!("  - #{}  {} — {}", r.id, r.name, t),
+                        None => println!("  - #{}  {}", r.id, r.name),
+                    }
                 }
             }
         }
@@ -182,11 +179,6 @@ async fn main() -> Result<()> {
         Command::SetBoss { person, boss } => {
             org_core::set_boss(&db, person, boss).await?;
             println!("Set boss: #{person} now reports to #{boss}.");
-        }
-
-        Command::Relate { from, to, kind } => {
-            org_core::relate(&db, RelateInput::manual(from, to, kind.clone())).await?;
-            println!("Related: #{from} -[{kind}]-> #{to}.");
         }
 
         Command::Remove { id } => {

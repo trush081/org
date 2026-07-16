@@ -33,11 +33,10 @@ pub struct Relationship {
     pub created_at: String,
 }
 
-/// Well-known relationship kinds. Not exhaustive — the column is open TEXT.
+/// Well-known relationship kinds. Not exhaustive — the column is open TEXT,
+/// so future features (AI-inferred edges) can add kinds without a migration.
 pub mod kind {
     pub const REPORTS_TO: &str = "reports_to";
-    pub const MENTORS: &str = "mentors";
-    pub const COLLABORATES_WITH: &str = "collaborates_with";
 }
 
 /// Well-known edge sources. Manual entries use MANUAL; AI uses INFERRED.
