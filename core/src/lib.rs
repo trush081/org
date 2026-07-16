@@ -17,7 +17,7 @@ pub use infer::{infer_boss, tally_boss_vote, BossVote, Inference};
 pub use io::{export, export_json, import, import_json, OrgDump};
 pub use model::{OrgError, Person, Relationship, Result};
 pub use people::{add_person, get_person, list_people, remove_person, update_person, PersonInput};
-pub use search::{fuzzy_search, SearchHit};
+pub use search::{fuzzy_search, resolve_person, Resolution, SearchHit};
 pub use seniority::{rank_of, rank_title, Rank};
 pub use tree::{
     chain_of_command, direct_reports, render_tree, roots, subtree, team_headcounts, Node,

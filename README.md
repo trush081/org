@@ -13,7 +13,7 @@ CLI first; a Tauri desktop app and AI features come later, over the same core.
 **Milestone 1 complete:** `core` + `cli`, working and tested.
 
 ```
-cargo test --workspace                                  # 52 passing
+cargo test --workspace                                  # 57 passing
 cargo clippy --workspace --all-targets -- -D warnings   # clean
 ```
 
@@ -44,11 +44,15 @@ see the exact `cargo install` command without running it.
 ```sh
 org add "Pat Smith"  --team "IDS Fulfillment" --title "Eng Manager"
 org add "Trent Rush" --team "IDS Fulfillment" --title "Sr Engineer"
-org set-boss 2 1                 # Trent (#2) reports to Pat (#1)
+org set-boss trent pat           # ids work too: org set-boss 2 1
 org add "Mike Chen" --team "IDS Fulfillment" --infer-boss   # guesses Pat from teammates
-org who 2                        # detail + chain of command + direct reports
-org tree 1                       # the reporting tree under Pat
+org who trent                    # detail + chain of command + direct reports
+org tree pat                     # the reporting tree under Pat
 ```
+
+Anywhere a command takes a person, an id or a name works. Names go through
+fuzzy matching (typos are fine) but must resolve to exactly one person — if
+two Trents match, `org` lists the candidates and asks for the id.
 
 Working from a clone instead? `cargo run -p org -- <args>`, or
 `cargo build && alias org=./target/debug/org`.
@@ -59,12 +63,12 @@ Working from a clone instead? `cargo run -p org -- <args>`, or
 |---|---|
 | `add <name> [--team] [--title] [--notes] [--infer-boss]` | Add a person; optionally infer a boss from teammates. |
 | `find <query>` | Fuzzy search across name/team/title/notes (substring + typo tolerance). |
-| `list [--team <team>]` | List people, optionally one team. |
+| `list [--team <team>]` | List people, most senior first, optionally one team. |
 | `teams` | Per-team headcounts. |
-| `tree <id>` | Indented reporting tree under a person, most senior siblings first. |
-| `who <id>` | Person detail + chain of command + direct reports (with titles). |
+| `tree <person>` | Indented reporting tree under a person, most senior siblings first. |
+| `who <person>` | Person detail + chain of command + direct reports (with titles). |
 | `set-boss <person> <boss>` | Set/replace a reporting line. |
-| `remove <id>` | Delete a person (cascades their edges). |
+| `remove <person>` | Delete a person (cascades their edges). |
 | `export` | Dump the whole directory as JSON to stdout. |
 | `import <file\|->` | Load a JSON dump from a file or stdin. |
 | `update [--local] [--dry-run] [--check]` | Update `org` itself — checks GitHub for a newer commit first and skips reinstalling if you're current (or `--local` to build from a checkout, `--check` to only report). |

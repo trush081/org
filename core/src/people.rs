@@ -100,22 +100,30 @@ pub async fn remove_person(db: &Db, id: i64) -> Result<()> {
     Ok(())
 }
 
-/// All people, ordered by name. Used by `list`/`export`.
+/// All people, most senior title first (unknown titles last), then by name —
+/// the same sibling order the tree uses. Used by `list`/`export`/search.
 pub async fn list_people(db: &Db, team: Option<&str>) -> Result<Vec<Person>> {
     let mut out = Vec::new();
     let mut rows = match team {
         Some(t) => {
-            let sql = format!("SELECT {PERSON_COLS} FROM people WHERE team = ?1 ORDER BY name");
+            let sql = format!("SELECT {PERSON_COLS} FROM people WHERE team = ?1");
             db.conn().query(&sql, [t]).await?
         }
         None => {
-            let sql = format!("SELECT {PERSON_COLS} FROM people ORDER BY name");
+            let sql = format!("SELECT {PERSON_COLS} FROM people");
             db.conn().query(&sql, ()).await?
         }
     };
     while let Some(row) = rows.next().await? {
         out.push(row_to_person(&row)?);
     }
+    // Rank in Rust, not SQL — titles are free text (see crate::seniority).
+    out.sort_by_key(|p| {
+        (
+            std::cmp::Reverse(crate::seniority::rank_of(p.title.as_deref())),
+            p.name.clone(),
+        )
+    });
     Ok(out)
 }
 
@@ -201,5 +209,36 @@ mod tests {
         assert_eq!(ids.len(), 1);
         assert_eq!(ids[0].name, "Bea");
         assert_eq!(list_people(&db, None).await.unwrap().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn list_orders_by_seniority_then_name() {
+        let db = Db::open_memory().await.unwrap();
+        for (name, title) in [
+            ("Zoe", Some("Director")),
+            ("Al", Some("SWE II")),
+            ("Bo", Some("Sr Engineer")),
+            ("Cy", None), // no title -> last
+            ("Ann", Some("SWE II")),
+        ] {
+            add_person(
+                &db,
+                PersonInput {
+                    name: name.to_string(),
+                    title: title.map(String::from),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        }
+        let names: Vec<_> = list_people(&db, None)
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|p| p.name)
+            .collect();
+        // Director > Senior > the two SWE IIs (name order) > untitled.
+        assert_eq!(names, vec!["Zoe", "Bo", "Al", "Ann", "Cy"]);
     }
 }

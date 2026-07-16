@@ -45,19 +45,19 @@ enum Command {
     },
     /// Show per-team headcounts.
     Teams,
-    /// Print the reporting tree under a person (by id).
-    Tree { id: i64 },
+    /// Print the reporting tree under a person (id or name).
+    Tree { person: String },
     /// Show a person's detail plus chain of command and direct reports.
-    Who { id: i64 },
+    Who { person: String },
     /// Set a person's boss (replaces any existing reporting line).
     SetBoss {
-        /// The report.
-        person: i64,
-        /// Their new boss.
-        boss: i64,
+        /// The report (id or name).
+        person: String,
+        /// Their new boss (id or name).
+        boss: String,
     },
     /// Remove a person (cascades their relationship edges).
-    Remove { id: i64 },
+    Remove { person: String },
     /// Dump the whole directory as JSON to stdout.
     Export,
     /// Load a JSON dump from a file (or '-' for stdin).
@@ -143,18 +143,17 @@ async fn main() -> Result<()> {
             print!("{}", render::teams(&counts));
         }
 
-        Command::Tree { id } => {
-            // render_tree errors if the id is unknown — surface it cleanly.
+        Command::Tree { person } => {
+            let id = resolve(&db, &person).await?.id;
             let text = org_core::tree::render_tree(&db, id)
                 .await
                 .with_context(|| format!("rendering tree for person {id}"))?;
             print!("{text}");
         }
 
-        Command::Who { id } => {
-            let person = org_core::get_person(&db, id)
-                .await?
-                .with_context(|| format!("no person with id {id}"))?;
+        Command::Who { person } => {
+            let person = resolve(&db, &person).await?;
+            let id = person.id;
             print!("{}", render::person_detail(&person));
 
             let chain = org_core::tree::chain_of_command(&db, id).await?;
@@ -177,13 +176,23 @@ async fn main() -> Result<()> {
         }
 
         Command::SetBoss { person, boss } => {
-            org_core::set_boss(&db, person, boss).await?;
-            println!("Set boss: #{person} now reports to #{boss}.");
+            let report = resolve(&db, &person).await?;
+            let boss = resolve(&db, &boss).await?;
+            org_core::set_boss(&db, report.id, boss.id).await?;
+            println!(
+                "Set boss: #{}  {} now reports to #{}  {}.",
+                report.id, report.name, boss.id, boss.name
+            );
         }
 
-        Command::Remove { id } => {
-            org_core::remove_person(&db, id).await?;
-            println!("Removed person #{id} (and any of their relationship edges).");
+        Command::Remove { person } => {
+            // Echo who actually got resolved — this is a delete.
+            let p = resolve(&db, &person).await?;
+            org_core::remove_person(&db, p.id).await?;
+            println!(
+                "Removed #{}  {} (and any of their relationship edges).",
+                p.id, p.name
+            );
         }
 
         Command::Export => {
@@ -213,4 +222,24 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Resolve an id-or-name selector to a person, or exit with a helpful message.
+/// Ambiguity lists the candidates so the user can rerun with an id.
+async fn resolve(db: &Db, selector: &str) -> Result<org_core::Person> {
+    match org_core::resolve_person(db, selector).await? {
+        org_core::Resolution::One(p) => Ok(p),
+        org_core::Resolution::Ambiguous(candidates) => {
+            let mut msg = format!("'{selector}' matches more than one person:\n");
+            msg.push_str(&render::person_table(&candidates));
+            msg.push_str("Rerun with the id.");
+            anyhow::bail!(msg)
+        }
+        org_core::Resolution::NotFound => {
+            if selector.chars().all(|c| c.is_ascii_digit()) {
+                anyhow::bail!("no person with id {selector}")
+            }
+            anyhow::bail!("no person matching '{selector}' (try `org find {selector}`)")
+        }
+    }
 }
