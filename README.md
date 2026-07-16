@@ -13,7 +13,7 @@ CLI first; a Tauri desktop app and AI features come later, over the same core.
 **Milestone 1 complete:** `core` + `cli`, working and tested.
 
 ```
-cargo test --workspace                                  # 38 passing
+cargo test --workspace                                  # 45 passing
 cargo clippy --workspace --all-targets -- -D warnings   # clean
 ```
 
@@ -31,10 +31,13 @@ This puts `org` on your PATH (in `~/.cargo/bin`). To update later, just run:
 org update                 # pull the latest from GitHub and reinstall
 ```
 
-`org update` always installs from GitHub by default. For local development use
-`org update --local` (builds from your checkout — handy for testing unpushed
-changes), or `org update --dry-run` to see the exact `cargo install` command
-without running it.
+`org update` first checks whether the remote's latest commit differs from the
+one your binary was built from (a quick `git ls-remote`, no clone) — if you're
+already current it says so and skips the reinstall, instead of recompiling
+every time. Use `org update --check` to only report the check result without
+installing. For local development use `org update --local` (builds from your
+checkout — handy for testing unpushed changes), or `org update --dry-run` to
+see the exact `cargo install` command without running it.
 
 ## Quick start
 
@@ -65,7 +68,7 @@ Working from a clone instead? `cargo run -p org -- <args>`, or
 | `remove <id>` | Delete a person (cascades their edges). |
 | `export` | Dump the whole directory as JSON to stdout. |
 | `import <file\|->` | Load a JSON dump from a file or stdin. |
-| `update [--local] [--dry-run]` | Update `org` itself — reinstall the latest from GitHub (or `--local` from a checkout). |
+| `update [--local] [--dry-run] [--check]` | Update `org` itself — checks GitHub for a newer commit first and skips reinstalling if you're current (or `--local` to build from a checkout, `--check` to only report). |
 
 ## Database
 

@@ -81,6 +81,9 @@ enum Command {
         /// Print the install command instead of running it.
         #[arg(long)]
         dry_run: bool,
+        /// Only check whether an update is available; don't install it.
+        #[arg(long)]
+        check: bool,
     },
 }
 
@@ -94,9 +97,10 @@ async fn main() -> Result<()> {
         local,
         source,
         dry_run,
+        check,
     } = &cli.command
     {
-        return update::run(*local, source.clone(), *dry_run);
+        return update::run(*local, source.clone(), *dry_run, *check);
     }
 
     // Resolve DB location with the precedence core defines, then open it.
