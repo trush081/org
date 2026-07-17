@@ -1,0 +1,16 @@
+[package]
+name = "org-app"
+version = "0.1.0"
+edition = "2024"
+
+# Tauri desktop app: a thin IPC layer over org-core, same role the cli crate
+# plays for the terminal. All logic stays in core.
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+org-core = { path = "../core" }
+tauri = { version = "2", features = [] }
+serde = { workspace = true }
+serde_json = { workspace = true }

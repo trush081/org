@@ -12,7 +12,8 @@ use crate::model::{Person, Result};
 use crate::people::list_people;
 
 /// A person plus why/how strongly they matched. Higher `score` ranks first.
-#[derive(Debug, Clone)]
+/// Serialize: crosses the IPC boundary to the desktop app's webview.
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct SearchHit {
     pub person: Person,
     /// Field-weighted score; ties broken by name. Opaque, only for ordering.

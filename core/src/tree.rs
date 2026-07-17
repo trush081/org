@@ -17,7 +17,8 @@ use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
 
 /// A node in a traversal result: a person plus their depth from the anchor.
-#[derive(Debug, Clone, PartialEq)]
+/// Serialize: crosses the IPC boundary to the desktop app's webview.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct Node {
     pub id: i64,
     pub name: String,

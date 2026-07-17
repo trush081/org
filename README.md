@@ -6,16 +6,37 @@ so a Sr Engineer lists above an SWE II under the same boss. Reporting lines are
 rows in a relationship graph, which leaves room to grow into (later) AI-inferred
 hierarchy and semantic search over notes.
 
-CLI first; a Tauri desktop app and AI features come later, over the same core.
+Three crates over one shared core: `core` (all logic), `cli` (terminal), and
+`app` (Tauri desktop). AI features come later, over the same core.
 
 ## Status
 
-**Milestone 1 complete:** `core` + `cli`, working and tested.
+`core` + `cli` complete and tested; `app` has the read path (search, person
+detail, tree).
 
 ```
 cargo test --workspace                                  # 57 passing
 cargo clippy --workspace --all-targets -- -D warnings   # clean
 ```
+
+## Desktop app
+
+A Tauri 2 app in `app/`: search-as-you-type, person detail with chain of
+command and direct reports, and the reporting tree — same seniority ordering
+as the CLI, same database, so the two stay in sync automatically.
+
+```sh
+cargo run -p org-app        # dev; or `cargo tauri dev` from app/
+```
+
+The frontend is plain HTML/CSS/JS in `app/ui` — no Node, no bundler. Tauri
+embeds those files at compile time, so `cargo run` is the whole dev loop
+(rerun it after UI changes).
+
+Next steps for the app: add/edit people and set-boss from the UI, an
+org-wide tree view (roots down), bundling a distributable .app
+(`cargo tauri build` — set `bundle.active: true` first), and auto-refresh
+when the CLI changes the database underneath the app.
 
 ## Install
 

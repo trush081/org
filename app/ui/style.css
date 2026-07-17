@@ -1,0 +1,185 @@
+/* Minimal, native-feeling styling. System font, no framework. */
+
+:root {
+  --bg: #ffffff;
+  --bg-side: #f4f4f5;
+  --fg: #1c1c1e;
+  --muted: #6e6e73;
+  --accent: #2563eb;
+  --hover: #e8e8ea;
+  --border: #d9d9de;
+  --error: #b91c1c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e20;
+    --bg-side: #29292c;
+    --fg: #ececee;
+    --muted: #9a9aa1;
+    --accent: #60a5fa;
+    --hover: #38383c;
+    --border: #3f3f44;
+    --error: #f87171;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+#layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100vh;
+}
+
+/* --- sidebar ------------------------------------------------------------ */
+
+#sidebar {
+  background: var(--bg-side);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 10px;
+}
+
+#search {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  outline: none;
+}
+
+#search:focus {
+  border-color: var(--accent);
+}
+
+#results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#results li {
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#results li:hover,
+#results li.selected {
+  background: var(--hover);
+}
+
+#results .name {
+  font-weight: 600;
+}
+
+#results .sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* --- main pane ---------------------------------------------------------- */
+
+#main {
+  overflow-y: auto;
+}
+
+.pane {
+  padding: 24px 28px;
+  max-width: 720px;
+}
+
+.pane header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+}
+
+.pane h1 {
+  margin: 0;
+  font-size: 22px;
+  width: 100%;
+}
+
+.pane h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 20px 0 6px;
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+.error {
+  color: var(--error);
+}
+
+button {
+  font: inherit;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-side);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--hover);
+}
+
+/* --- people lists (chain, reports, tree) --------------------------------- */
+
+.people,
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.people li,
+.tree li {
+  padding: 3px 0;
+}
+
+.person-link {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.person-link:hover {
+  text-decoration: underline;
+}
+
+.person-title {
+  color: var(--muted);
+}
+
+.person-id {
+  color: var(--muted);
+  font-size: 12px;
+  margin-right: 6px;
+}

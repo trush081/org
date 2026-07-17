@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>org</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="layout">
+    <aside id="sidebar">
+      <input
+        id="search"
+        type="search"
+        placeholder="Search people…"
+        autocomplete="off"
+        autofocus
+      />
+      <ul id="results" role="listbox"></ul>
+    </aside>
+
+    <main id="main">
+      <div id="empty" class="pane">
+        <p class="muted">Select a person, or start typing to search.</p>
+      </div>
+
+      <div id="detail" class="pane" hidden>
+        <header>
+          <h1 id="d-name"></h1>
+          <p id="d-title" class="muted"></p>
+          <p id="d-team" class="muted"></p>
+          <button id="d-tree-btn" type="button">View tree</button>
+        </header>
+        <section id="d-notes-wrap" hidden>
+          <h2>Notes</h2>
+          <p id="d-notes"></p>
+        </section>
+        <section>
+          <h2>Chain of command</h2>
+          <ol id="d-chain" class="people"></ol>
+        </section>
+        <section>
+          <h2>Direct reports</h2>
+          <ul id="d-reports" class="people"></ul>
+        </section>
+      </div>
+
+      <div id="tree" class="pane" hidden>
+        <header>
+          <h1 id="t-name"></h1>
+          <button id="t-back-btn" type="button">Back to detail</button>
+        </header>
+        <ul id="t-nodes" class="tree"></ul>
+      </div>
+
+      <div id="error" class="pane" hidden>
+        <p id="error-msg" class="error"></p>
+      </div>
+    </main>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

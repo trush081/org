@@ -1,8 +1,8 @@
 # Virtual workspace root: no [package] here, just the member list.
 # Keeping the root manifest package-free is what lets `core` stay UI-agnostic
-# and lets `app/` (Tauri, later) join as a peer depending on the same `core`.
+# and lets `app/` (Tauri) join as a peer depending on the same `core`.
 [workspace]
-members = ["core", "cli"]
+members = ["core", "cli", "app"]
 resolver = "3" # edition-2024 default resolver; required for a 2024 workspace
 
 # Shared dependency versions live here so every member pins identical versions.
